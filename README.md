@@ -26,3 +26,9 @@ Create a room and use **Share link**. Anyone with the link can join as a guest a
 
 ## Architecture
 React + Vite frontend, Express + Socket.IO backend, PostgreSQL authentication, and WebRTC mesh for small rooms.
+
+
+## Shared-link guest access
+- Open a room link and choose **Join as guest** to enter without creating an account.
+- Enter a display name, allow camera/microphone access, then press **Enter room**.
+- Keep rooms small for the best WebRTC mesh experience; each participant connects directly to the others.
