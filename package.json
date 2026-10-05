@@ -1,1 +1,30 @@
-{"name":"realmeet-task4","version":"1.0.0","private":true,"description":"RealMeet real-time communication app for CodeAlpha Task 4","main":"server.js","scripts":{"start":"node server.js"},"engines":{"node":">=20"},"dependencies":{"bcryptjs":"^3.0.2","cookie-parser":"^1.4.7","express":"^5.1.0","express-rate-limit":"^8.1.0","helmet":"^8.1.0","jsonwebtoken":"^9.0.2","pg":"^8.16.3","socket.io":"^4.8.1"}}
+{
+  "name": "meetspace-codealpha-task4",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MeetSpace real-time communication app for CodeAlpha Task 4",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "node server/index.js",
+    "dev:client": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "4.4.1",
+    "bcryptjs": "3.0.2",
+    "concurrently": "9.1.2",
+    "cors": "2.8.5",
+    "dotenv": "16.5.0",
+    "express": "4.21.2",
+    "jsonwebtoken": "9.0.2",
+    "lucide-react": "0.511.0",
+    "pg": "8.16.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "socket.io": "4.8.1",
+    "socket.io-client": "4.8.1",
+    "vite": "6.3.5"
+  }
+}
