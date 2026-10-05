@@ -25,7 +25,7 @@ app.use(cookieParser());
 app.use(rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));
 app.use(express.static(path.join(__dirname,'public')));
 
-async function initDb(){if(!pool)return;await pool.query('CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, username VARCHAR(32) UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW())')}
+async function initDb(){if(!pool)return;await pool.query('CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, username VARCHAR(32) UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW())');if(process.env.DEMO_USERNAME&&process.env.DEMO_PASSWORD){const username=String(process.env.DEMO_USERNAME).trim().toLowerCase();const password=String(process.env.DEMO_PASSWORD);if(/^[a-z0-9_]{3,32}$/.test(username)&&password.length>=8){const hash=await bcrypt.hash(password,12);await pool.query('INSERT INTO users(username,password_hash) VALUES($1,$2) ON CONFLICT (username) DO NOTHING',[username,hash])}}}
 async function findUser(username){if(pool){const q=await pool.query('SELECT id,username,password_hash FROM users WHERE username=$1',[username]);return q.rows[0]||null}return memoryUsers.get(username)||null}
 function sign(user){return jwt.sign({id:user.id,username:user.username},JWT_SECRET,{expiresIn:'7d'})}
 function setAuth(res,user){res.cookie('rm_token',sign(user),{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:7*24*60*60*1000})}
