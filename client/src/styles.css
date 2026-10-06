@@ -92,3 +92,15 @@
   .side.panel-open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(58dvh,520px)!important}
   .workspace{grid-template-columns:1fr!important}
 }
+
+
+/* Portrait camera framing on phones */
+@media (max-width:1000px) and (orientation:portrait){
+  .video-grid{align-items:center!important}
+  .tile,.tile.local{width:100%!important;max-width:520px!important;aspect-ratio:9/16!important;height:auto!important;min-height:0!important}
+  .tile video{width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 50%!important}
+}
+@media (max-width:600px) and (orientation:portrait){
+  .stage{padding-left:6px!important;padding-right:6px!important}
+  .tile,.tile.local{max-width:none!important;border-radius:14px!important}
+}
