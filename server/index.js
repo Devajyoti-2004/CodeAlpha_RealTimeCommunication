@@ -5,6 +5,20 @@ const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.D
 async function initDb(){if(!process.env.DATABASE_URL){console.warn('DATABASE_URL missing; auth persistence unavailable.');return} await pool.query(`CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,name TEXT NOT NULL,created_at TIMESTAMPTZ DEFAULT NOW())`)}
 const sign=(u)=>jwt.sign({id:u.id,email:u.email,name:u.name},process.env.JWT_SECRET||'dev-secret-change-me',{expiresIn:'7d'});
 app.get('/api/health',(req,res)=>res.json({ok:true,service:'meetspace'}));
+app.post('/api/ai',async(req,res)=>{
+  try{
+    const {task,messages}=req.body||{};
+    if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'AI is not configured. Add OPENAI_API_KEY in Railway Variables.'});
+    if(typeof task!=='string'||!task.trim())return res.status(400).json({error:'AI task is required.'});
+    const transcript=(Array.isArray(messages)?messages:[]).slice(-60).map(m=>m.user+': '+m.text).join('\n');
+    const prompt='You are the MeetSpace meeting assistant. '+task+'\nUse only this meeting chat as context. Be concise and practical.\n\nCHAT:\n'+transcript;
+    const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+process.env.OPENAI_API_KEY},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-6-luna',input:prompt,max_output_tokens:700})});
+    const j=await r.json();
+    if(!r.ok)return res.status(502).json({error:j?.error?.message||'AI request failed'});
+    const out=j.output_text||j.output?.flatMap(x=>x.content||[]).map(x=>x.text||'').join('')||'No AI response.';
+    res.json({result:out});
+  }catch(e){console.error('AI error',e);res.status(500).json({error:'AI assistant failed. Please try again.'})}
+});
 app.post('/api/auth/register',async(req,res)=>{try{const {name,email,password}=req.body;if(!name||!email||!password||password.length<8)return res.status(400).json({error:'Name, email and an 8+ character password are required.'});const hash=await bcrypt.hash(password,12);const r=await pool.query('INSERT INTO users(name,email,password_hash) VALUES($1,$2,$3) RETURNING id,name,email',[name.trim(),email.trim().toLowerCase(),hash]);const u=r.rows[0];res.json({token:sign(u),user:u})}catch(e){res.status(e.code==='23505'?409:500).json({error:e.code==='23505'?'Email already registered':'Registration failed'})}});
 app.post('/api/auth/login',async(req,res)=>{try{const {email,password}=req.body;const r=await pool.query('SELECT * FROM users WHERE email=$1',[email?.trim().toLowerCase()]);if(!r.rowCount||!(await bcrypt.compare(password,r.rows[0].password_hash)))return res.status(401).json({error:'Invalid email or password'});const u=r.rows[0];res.json({token:sign(u),user:{id:u.id,name:u.name,email:u.email}})}catch(e){res.status(500).json({error:'Login failed'})}});
 app.use(express.static(path.join(__dirname,'..','dist')));
@@ -18,6 +32,8 @@ io.on('connection',socket=>{
  socket.on('whiteboard:draw',({roomId,stroke})=>{socket.to(roomId).emit('whiteboard:draw',stroke)});
  socket.on('whiteboard:clear',roomId=>socket.to(roomId).emit('whiteboard:clear'));
  socket.on('chat:message',({roomId,text})=>{if(typeof text==='string'&&text.trim())io.to(roomId).emit('chat:message',{id:crypto.randomUUID(),text:text.trim().slice(0,2000),user:socket.user.name,at:Date.now()})});
+ socket.on('chat:reaction',({roomId,id,reaction})=>{if(typeof id==='string'&&typeof reaction==='string')io.to(roomId).emit('chat:reaction',{id,reaction})});
+ socket.on('meeting:hand',({roomId,raised})=>{io.to(roomId).emit('meeting:hand',{user:socket.user.name,raised:!!raised})});
  socket.on('file:share',({roomId,file})=>{if(file?.data?.length>12*1024*1024)return;io.to(roomId).emit('file:share',{...file,from:socket.user.name,at:Date.now()})});
  socket.on('disconnect',()=>{for(const [room,set] of rooms){if(set.delete(socket.id)){socket.to(room).emit('room:user-left',socket.id);if(!set.size)rooms.delete(room)}}});
 });
