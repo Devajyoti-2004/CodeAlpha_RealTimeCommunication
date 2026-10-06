@@ -69,3 +69,26 @@
   .tile,.tile.local{aspect-ratio:16/10!important}
   .tile video{object-fit:cover!important;object-position:center!important}
 }
+
+
+/* Separate Chat / Board / Files panel: hidden from the main meeting screen */
+.workspace{grid-template-columns:1fr!important}
+.side{display:none!important}
+.side.panel-open{display:block!important;position:fixed!important;right:0!important;top:70px!important;bottom:0!important;width:min(380px,92vw)!important;z-index:100!important;box-shadow:-25px 0 70px rgba(0,0,0,.55)!important}
+.panel-close{display:flex;justify-content:flex-end;padding:7px 10px;border-bottom:1px solid #25242d}
+.panel-close button{background:#191820;color:#aaa5b9;border:1px solid #302e39;border-radius:8px;padding:6px 10px;font-size:11px}
+.mobile-chat-button{position:fixed;right:14px;bottom:22px;z-index:60;display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:24px;background:#6f5bd0;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.4);font-weight:600}
+@media(min-width:601px){
+  .mobile-chat-button{display:none}
+}
+@media(max-width:600px){
+  .top-user .chat-toggle{display:none}
+  .side.panel-open{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;height:min(58dvh,520px)!important;border-radius:18px 18px 0 0!important;border:0!important;border-top:1px solid #292833!important}
+  .panel-close{height:42px;min-height:42px;padding:5px 10px}
+  .panel,.files,.board{height:calc(min(58dvh,520px) - 92px)!important}
+  .mobile-chat-button{bottom:max(14px,env(safe-area-inset-bottom));right:14px}
+}
+@media(max-width:1000px) and (orientation:portrait){
+  .side.panel-open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(58dvh,520px)!important}
+  .workspace{grid-template-columns:1fr!important}
+}
